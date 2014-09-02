@@ -30,13 +30,13 @@ function love.load()
 	   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	   { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
 	}
 
 	block_list = {}
 
 	-- Player's color
-	playerColor = {255,0,128}
+	playerColor = {255,100,128}
 	g.setBackgroundColor(85, 85, 85)
 
 	-- Restrict camera
@@ -44,13 +44,13 @@ function love.load()
 	world = love.physics.newWorld(0, 200, true)
 
 	-- Player settings
-	p = Player:new()
-	p.x = 300
-	p.y = 300
-	p.width = 25
-	p.height = 40
-	p.jumpSpeed = -800
-	p.runSpeed = 500
+	p = Player:new(
+		200,          -- X value
+		300, 		  -- Y value
+		25, 		  -- Width
+		40,           -- Height
+		{255,100,128} -- Colour
+		)
 
 	create_world(map)
 
@@ -66,20 +66,11 @@ function love.draw()
 	local y = math.floor(p.y)
 
 	for i=1, table.getn(block_list) do
-		g.setColor(block_list[i].color)
-		g.rectangle("fill", block_list[i].x, block_list[i].y, block_list[i].width, block_list[i].height)
+		block_list[i]:draw()	
 	end
 
 	-- Draw the player
-	g.setColor(playerColor)
-	g.rectangle("fill", x, y, p.width, p.height)
-
-	-- Temporary floor
-	g.setColor({255,0,30})
-	g.rectangle("fill", 0, 500, 1000, 20)
-
-	g.setColor(new_block.color)
-	g.rectangle("fill", new_block.x, new_block.y, new_block.width, new_block.height)
+	p:draw()
 
 	--debug info (x/y coords + player state)
 	g.setColor(255, 255, 255)
@@ -107,9 +98,6 @@ function love.update(dt)
 		hasJumped = true
 		p:jump()
 	end
-
-	-- Add velocity to player's x and y positions
-	p:update(dt, gravity)
 
 	-- Shitty collision for the floor
 	p.x = math.clamp(p.x, 0, 400 * 2 - p.width)
@@ -139,21 +127,29 @@ function math.clamp(x, min, max)
 	return x < min and min or (x > max and max or x)
 end
 
-function check_collision(one, two)
-
-end
-
 function create_world(map)
 	for y=1, table.getn(map) do
 		for x=1, table.getn(map[y]) do
-			if(map[y][x] ~= 0) then
+			if(map[y][x] ~= 1 and map[y][x] ~= 0) then
 				new_block = Block:new(
-					x*(map[y][x]*10),      -- X value
-					y*(map[y][x]*10),      -- Y value
-					(map[y][x]*10),   	   -- Block height
-					(map[y][x]*10),        -- Block width
-					{255,0,map[y][x]*100}, -- Block colour
-					true)                  -- Is block solid (ie. Enable or disable collision detection)
+					x*(map[y][x]*10),       -- X value
+					y*(map[y][x]*10),       -- Y value
+					(map[y][x]*10),   	    -- Block height
+					(map[y][x]*10),         -- Block width
+					{255,100,map[y][x]*100},-- Block colour
+					true,					-- Is block solid (ie. Enable or disable collision detection)
+					true)                   -- Is block static
+				print("Created Static Block")
+				block_list[#block_list+1] = new_block
+			elseif(map[y][x] ~= 0) then
+				new_block = Block:new(
+					x*(map[y][x]*10),       -- X value
+					y*(map[y][x]*10),       -- Y value
+					(map[y][x]*10),   	    -- Block height
+					(map[y][x]*10),         -- Block width
+					{255,100,map[y][x]*100},-- Block colour
+					true,                   -- Is block solid (ie. Enable or disable collision detection)
+					false)					-- Is block static
 				block_list[#block_list+1] = new_block
 			end
 		end
